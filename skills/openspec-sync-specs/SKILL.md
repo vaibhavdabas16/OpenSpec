@@ -117,7 +117,14 @@ In both branches, never create the root as a side effect: do not run `openspec i
 
       **ADDED Requirements:**
       - If requirement doesn't exist in main spec → add it
-      - If requirement already exists → update it to match (treat as implicit MODIFIED)
+      - If it already exists with identical content → leave it unchanged (already
+        synced; re-syncing is a no-op)
+      - If it already exists with different content → do not overwrite it. A later
+        change may have edited it since this one was synced. Stop the sync for that
+        capability and report the conflict, matching `openspec archive`; tell the
+        user to reconcile it, or to use MODIFIED if the change means to replace it
+      - If an existing requirement's name differs from it only in case or spacing →
+        treat that as the same conflict; do not add a second copy
 
       **MODIFIED Requirements:**
       - Find the requirement in main spec

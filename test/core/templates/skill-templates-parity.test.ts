@@ -67,7 +67,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getContinueChangeSkillTemplate: '3f5d86b8198fe5694f7aa715eb1c961cc319e555f6f16c674c61e10d40f03dd5',
   getApplyChangeSkillTemplate: '244136f2de5518cd92b0d58e1cec8ffbef2bd2443b5e49f748cf64e7d7c6fce8',
   getFfChangeSkillTemplate: '293a3bd2c6372dba854792c416dad0efc9ba83515496dc576f9ef2a067701d82',
-  getSyncSpecsSkillTemplate: '7aaf33f2a3ddb86d8bd7131bf36588a580fb8279127b881f19c6d8af60cfe059',
+  getSyncSpecsSkillTemplate: '551c6f5a960ef0b2a6de1f6ae28663ff139fbc1cc807daf9649b26e003a19130',
   getOnboardSkillTemplate: '06f68fb14002e182b88def80b0798a0d571b3d36f7ea7304fd44487b1b8f27a3',
   getOpsxExploreCommandTemplate: '94d998600803a5d75a9ff9627fb35a45a6cf8a0ac19874a66bf8bc45e7a4e396',
   getOpsxNewCommandTemplate: '63fad016276d99c5325637bb2e9a2a375508e3e0b2f08de244f462a3287e8efc',
@@ -76,7 +76,7 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getOpsxFfCommandTemplate: '95bc67362028d4f66073843e823f58192b32c717917d0cd69c98ef32f6366c48',
   getArchiveChangeSkillTemplate: 'bdf813952dd6bf4241b569370a5d19ec9173c28ebbc795522ce3abc66b7d1d58',
   getBulkArchiveChangeSkillTemplate: 'ad7b25a3dfd56bcfa237dd817849f9d6794b870f2fa1833d2480f574e01c6bd5',
-  getOpsxSyncCommandTemplate: '9198dbb037358ba542987ccb7b31ace676de41b5476bfc09827cfa535bc65bf5',
+  getOpsxSyncCommandTemplate: '0b8a6ba4a3fcc8460404830a3d64eefc0bed0327d9d4a43d6de24433ed178dcf',
   getVerifyChangeSkillTemplate: 'fc41a1c6d94db1fd3c373e9a7e29f06e6f0e4704595ffc7e004931eefbf0db0d',
   getOpsxArchiveCommandTemplate: '477c399c5dfa545e5ddf2d64964d6b00e98869035dbfcfe32a8a697493cc434a',
   getOpsxOnboardCommandTemplate: '1cd975ef1c65402ef464047667a912e13e730c99541198d12868aa3ebbf98306',
@@ -95,7 +95,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-continue-change': '79004c271dbf557c8191b749df96f7ba1ab48c65945c7a30722d433292f8266c',
   'openspec-apply-change': 'efb30419f0fc22cf6cf68e9142eacecd670cbcf2717423288cc07ff64432f3ce',
   'openspec-ff-change': '729cceff177bd8148b0cf2c5307ad2ee8d2ec5993dbf773e1a3dc8fc88ae6fd0',
-  'openspec-sync-specs': '02bb0d11a10c7626e5e641f0505336527050ab4d9d8bb45e1351c6ed05c0dc7a',
+  'openspec-sync-specs': 'c0a9b1b8922b4c83d8e78e919512e1ccba76ede035b9798cff87adbad265d5a0',
   'openspec-archive-change': '8f926e8026e551c1e3c996719aa6fc6d4f7ad6eead8c19076930c10d105c0d42',
   'openspec-bulk-archive-change': 'd1506fcc9f5380442582206f18df6e44d12d0e70665861cf1188c86a6a7ffb42',
   'openspec-verify-change': '8e547cddf53b89c95fc17d6c30decdc9a8b507bed242fae02b42a6f48c025177',
@@ -311,6 +311,27 @@ describe('skill templates split parity', () => {
       expect(content, variant).toContain(
         'If validation fails, report the problems and do not claim the sync succeeded'
       );
+    }
+  });
+
+  it('treats an ADDED requirement that already exists the way archive does (#2289)', () => {
+    const variants: Array<[string, string]> = [
+      ['sync skill', getSyncSpecsSkillTemplate().instructions],
+      ['sync command', getOpsxSyncCommandTemplate().content],
+    ];
+
+    for (const [variant, content] of variants) {
+      expect(content, variant).not.toContain('treat as implicit MODIFIED');
+      expect(content, variant).toContain(
+        'If it already exists with identical content → leave it unchanged'
+      );
+      expect(content, variant).toContain(
+        'If it already exists with different content → do not overwrite it'
+      );
+      expect(content, variant).toContain(
+        'Stop the sync for that\n        capability and report the conflict'
+      );
+      expect(content, variant).toContain('differs from it only in case or spacing');
     }
   });
 
