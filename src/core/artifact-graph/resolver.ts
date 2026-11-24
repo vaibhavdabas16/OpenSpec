@@ -184,6 +184,15 @@ export function getSchemaDir(
 }
 
 /**
+ * Parsed schemas by schema.yaml path. `list` and `view` resolve the same
+ * schema once per change, and parsing plus validation is most of that cost.
+ * An entry is only reused while the file's content is unchanged, so an edited
+ * schema is parsed again. Callers share the returned object and must not
+ * mutate it.
+ */
+const resolvedSchemaCache = new Map<string, { content: string; schema: SchemaYaml }>();
+
+/**
  * Resolves a schema name to a SchemaYaml object.
  *
  * Resolution order (when projectRoot is provided):
@@ -226,8 +235,15 @@ export function resolveSchema(name: string, projectRoot?: string): SchemaYaml {
     );
   }
 
+  const cached = resolvedSchemaCache.get(schemaPath);
+  if (cached !== undefined && cached.content === content) {
+    return cached.schema;
+  }
+
   try {
-    return parseSchema(content);
+    const schema = parseSchema(content);
+    resolvedSchemaCache.set(schemaPath, { content, schema });
+    return schema;
   } catch (err) {
     if (err instanceof SchemaValidationError) {
       throw new SchemaLoadError(

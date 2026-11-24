@@ -233,6 +233,34 @@ describe('CLI startup loads only what the command needs', () => {
     expect(implementationsLoaded(own)).toEqual([command]);
   });
 
+  // Every command inside a project runs root selection, which reads the
+  // store pointer from config.yaml. That read needs yaml but not zod, and
+  // reading or writing store state is what loads zod. `store list` with no
+  // registry does neither, so it loads no zod at all.
+  it('`openspec store list` loads no zod when there is no store state to read', async () => {
+    await ensureCliBuilt();
+    const { own, packages, status } = loadedModules(['store', 'list', '--json'], true);
+
+    expect(status).toBe(0);
+    expect([...packages]).not.toContain('zod');
+    expect(own).toContain('core/store-pointer.js');
+    expect(own).not.toContain('core/project-config.js');
+    expect(own).not.toContain('core/store/state-codec.js');
+  });
+
+  // `schemas` only lists schemas. The artifact-graph barrel would also pull
+  // outputs.js, and with it tinyglobby, for output paths it never resolves.
+  it('`openspec schemas` loads the schema resolver but not tinyglobby', async () => {
+    await ensureCliBuilt();
+    const { own, packages, status } = loadedModules(['schemas', '--json']);
+
+    expect(status).toBe(0);
+    expect([...packages]).not.toContain('tinyglobby');
+    expect(own).toContain('core/artifact-graph/resolver.js');
+    expect(own).not.toContain('core/artifact-graph/index.js');
+    expect(own).not.toContain('core/artifact-graph/outputs.js');
+  });
+
   it.each([
     ['status --json', 'status'],
     ['validate --all --json', 'validate'],

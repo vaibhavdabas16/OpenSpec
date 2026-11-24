@@ -47,7 +47,7 @@ import { resolveTaskFilesForChange } from '../../utils/task-progress.js';
 import { findTaskNumberingIssues } from './task-numbering.js';
 import { findMissingTaskCheckboxIssues } from './task-checkboxes.js';
 import { findPurposePlaceholderIssue } from './purpose-placeholder.js';
-import { getPackageSchemasDir, getSchemaDir } from '../artifact-graph/index.js';
+import { getPackageSchemasDir, getSchemaDir } from '../artifact-graph/resolver.js';
 
 export class Validator {
   private strictMode: boolean;

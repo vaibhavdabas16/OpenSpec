@@ -8,7 +8,7 @@ import { FileSystemUtils } from '../../utils/file-system.js';
 import {
   classifyOpenSpecDir,
   storePointerProblem,
-} from '../project-config.js';
+} from '../store-pointer.js';
 import {
   ANCHORED_OPENSPEC_DIRS,
   DIRECTORY_ANCHOR_FILE_NAME,

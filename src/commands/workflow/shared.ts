@@ -12,7 +12,7 @@ import {
   findNestedChangesIn,
 } from '../../utils/nested-change.js';
 import * as fs from 'fs';
-import { getSchemaDir, listSchemas } from '../../core/artifact-graph/index.js';
+import { getSchemaDir, listSchemas } from '../../core/artifact-graph/resolver.js';
 import type { ReferenceIndexEntry } from '../../core/references.js';
 import { isRootSelectionError } from '../../core/root-selection.js';
 

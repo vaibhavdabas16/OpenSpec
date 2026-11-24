@@ -38,7 +38,7 @@ import { gitOriginUrl, repoNameFromGitUrl } from './store/git.js';
 import { toKebabCase, isKebabId } from './id.js';
 import { inspectOpenSpecRoot } from './openspec-root.js';
 import { findRepoPlanningRootSync, type PlanningHome } from './planning-home.js';
-import { classifyOpenSpecDir, storePointerProblem } from './project-config.js';
+import { classifyOpenSpecDir, storePointerProblem } from './store-pointer.js';
 import { getGlobalConfig } from './global-config.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 

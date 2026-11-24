@@ -140,6 +140,45 @@ artifacts:
       expect(schema.version).toBe(99);
     });
 
+    it('parses an unchanged schema once and reuses it', () => {
+      expect(resolveSchema('spec-driven')).toBe(resolveSchema('spec-driven'));
+    });
+
+    it('parses a schema again after its file changes', () => {
+      process.env.XDG_DATA_HOME = tempDir;
+      const userSchemaDir = path.join(tempDir, 'openspec', 'schemas', 'edited');
+      fs.mkdirSync(userSchemaDir, { recursive: true });
+      const schemaPath = path.join(userSchemaDir, 'schema.yaml');
+      const schemaWithVersion = (version: number) => `
+name: edited
+version: ${version}
+artifacts:
+  - id: notes
+    generates: notes.md
+    description: Notes
+    template: notes.md
+`;
+
+      fs.writeFileSync(schemaPath, schemaWithVersion(1));
+      const first = resolveSchema('edited');
+      fs.writeFileSync(schemaPath, schemaWithVersion(2));
+      const second = resolveSchema('edited');
+
+      expect(first.version).toBe(1);
+      expect(second.version).toBe(2);
+    });
+
+    it('does not cache a schema that fails validation', () => {
+      process.env.XDG_DATA_HOME = tempDir;
+      const userSchemaDir = path.join(tempDir, 'openspec', 'schemas', 'broken');
+      fs.mkdirSync(userSchemaDir, { recursive: true });
+      const schemaPath = path.join(userSchemaDir, 'schema.yaml');
+
+      fs.writeFileSync(schemaPath, 'name: broken\nversion: 1\nartifacts: not-a-list\n');
+      expect(() => resolveSchema('broken')).toThrow(SchemaLoadError);
+      expect(() => resolveSchema('broken')).toThrow(SchemaLoadError);
+    });
+
     it('should not resolve a schema path outside the schema directories', () => {
       const outsideSchemaDir = path.join(tempDir, 'openspec', 'escape');
       fs.mkdirSync(outsideSchemaDir, { recursive: true });

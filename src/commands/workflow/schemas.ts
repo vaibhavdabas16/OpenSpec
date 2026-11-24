@@ -5,7 +5,7 @@
  */
 
 import chalk from 'chalk';
-import { listSchemasWithInfo } from '../../core/artifact-graph/index.js';
+import { listSchemasWithInfo } from '../../core/artifact-graph/resolver.js';
 import { resolveRootForCommand } from '../../core/root-selection.js';
 
 // -----------------------------------------------------------------------------

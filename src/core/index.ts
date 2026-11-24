@@ -14,5 +14,7 @@ export {
 
 export * from './references.js';
 export * from './store/index.js';
+// Not part of store/index.js, which CLI commands import: it loads yaml and zod.
+export * from './store/state-codec.js';
 export * from './planning-home.js';
 export * from './openspec-root.js';

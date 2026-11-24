@@ -16,18 +16,20 @@ import {
   isStoreRoot,
   isValidStoreId,
   listStoreRegistryEntries,
-  parseStoreMetadataState,
-  parseStoreRegistryState,
   readStoreMetadataState,
   readStoreRegistryState,
   readOptionalStoreMetadataState,
   resolveGitStoreBackendConfig,
-  serializeStoreMetadataState,
-  serializeStoreRegistryState,
   validateStoreId,
   writeStoreMetadataState,
   writeStoreRegistryState,
 } from '../../../src/core/store/index.js';
+import {
+  parseStoreMetadataState,
+  parseStoreRegistryState,
+  serializeStoreMetadataState,
+  serializeStoreRegistryState,
+} from '../../../src/core/store/state-codec.js';
 
 describe('store foundation', () => {
   let tempDir: string;
