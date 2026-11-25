@@ -110,6 +110,23 @@ describe('npm source installation', () => {
     installAndRun(`git+${pathToFileURL(sourceDir).href}`);
   }, 60_000);
 
+  // The Pi coding agent clones a git package and runs `npm install --omit=dev`
+  // inside the checkout, so `prepare` runs without TypeScript (#2214). It only
+  // needs the checkout's files, so the install has to succeed without a build.
+  it('skips the build when installing a checkout without dev dependencies', () => {
+    const result = run('npm', ['install', '--omit=dev']);
+    expect(result.status, `${result.error ?? ''}\n${result.stdout}\n${result.stderr}`).toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain('Skipping the build');
+    expect(fs.existsSync(path.join(sourceDir, 'node_modules', 'typescript'))).toBe(false);
+    expect(fs.existsSync(path.join(sourceDir, 'dist'))).toBe(false);
+    expect(fs.existsSync(pnpmLog)).toBe(false);
+  }, 60_000);
+
+  it('still builds when installing a checkout with dev dependencies', () => {
+    succeed('npm', ['install']);
+    expect(fs.existsSync(path.join(sourceDir, 'dist', 'index.js'))).toBe(true);
+  }, 60_000);
+
   it('packs freshly compiled artifacts without pnpm', () => {
     succeed('npm', ['install', '--ignore-scripts']);
     fs.mkdirSync(path.join(sourceDir, 'dist'));
