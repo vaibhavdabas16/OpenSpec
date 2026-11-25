@@ -65,14 +65,14 @@ const EXPECTED_FUNCTION_HASHES: Record<string, string> = {
   getExploreSkillTemplate: 'edf038cdf0f7179089ac6c4febd09e8c66a961459b66f0a460735a5e9de6f13d',
   getNewChangeSkillTemplate: 'aa1b169e0941ad8f9275f6f622019eebddeaab607815516bf872bf9ca7368b81',
   getContinueChangeSkillTemplate: '3f5d86b8198fe5694f7aa715eb1c961cc319e555f6f16c674c61e10d40f03dd5',
-  getApplyChangeSkillTemplate: '244136f2de5518cd92b0d58e1cec8ffbef2bd2443b5e49f748cf64e7d7c6fce8',
+  getApplyChangeSkillTemplate: '91626a8906bb576c9b88188588b7dae9ecd10a35966a26f0c23098c9fb8451fa',
   getFfChangeSkillTemplate: '293a3bd2c6372dba854792c416dad0efc9ba83515496dc576f9ef2a067701d82',
   getSyncSpecsSkillTemplate: '7aaf33f2a3ddb86d8bd7131bf36588a580fb8279127b881f19c6d8af60cfe059',
   getOnboardSkillTemplate: '06f68fb14002e182b88def80b0798a0d571b3d36f7ea7304fd44487b1b8f27a3',
   getOpsxExploreCommandTemplate: '94d998600803a5d75a9ff9627fb35a45a6cf8a0ac19874a66bf8bc45e7a4e396',
   getOpsxNewCommandTemplate: '63fad016276d99c5325637bb2e9a2a375508e3e0b2f08de244f462a3287e8efc',
   getOpsxContinueCommandTemplate: '82928867ed095b1a39a375958b4e91d959a9347e37843dddc66f70bf85ca0ea1',
-  getOpsxApplyCommandTemplate: '610de2766882217300eb362194055e1ebf1889a8c077bbcff4eb9fae8b8a11b1',
+  getOpsxApplyCommandTemplate: 'e8cee113eeee598b53e020aa3093b6ac0dca9c3e7bfff6c80e4e2572d720bf93',
   getOpsxFfCommandTemplate: '95bc67362028d4f66073843e823f58192b32c717917d0cd69c98ef32f6366c48',
   getArchiveChangeSkillTemplate: 'bdf813952dd6bf4241b569370a5d19ec9173c28ebbc795522ce3abc66b7d1d58',
   getBulkArchiveChangeSkillTemplate: 'ad7b25a3dfd56bcfa237dd817849f9d6794b870f2fa1833d2480f574e01c6bd5',
@@ -93,7 +93,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-explore': '012f3656e212a9e6537009897e887ca31eaf7e8173071451411094691eac8831',
   'openspec-new-change': '865a0326f5b5257869ae9615e8b86f4b58f896b18a614f272bdbf49ca2a88371',
   'openspec-continue-change': '79004c271dbf557c8191b749df96f7ba1ab48c65945c7a30722d433292f8266c',
-  'openspec-apply-change': 'efb30419f0fc22cf6cf68e9142eacecd670cbcf2717423288cc07ff64432f3ce',
+  'openspec-apply-change': '3cb922e1fba8d08308371fac1d6c6e919b3d534a8823930a41cfb9e59a45d14d',
   'openspec-ff-change': '729cceff177bd8148b0cf2c5307ad2ee8d2ec5993dbf773e1a3dc8fc88ae6fd0',
   'openspec-sync-specs': '02bb0d11a10c7626e5e641f0505336527050ab4d9d8bb45e1351c6ed05c0dc7a',
   'openspec-archive-change': '8f926e8026e551c1e3c996719aa6fc6d4f7ad6eead8c19076930c10d105c0d42',
@@ -102,7 +102,7 @@ const EXPECTED_GENERATED_SKILL_CONTENT_HASHES: Record<string, string> = {
   'openspec-onboard': '4e661e271eadbbcf9cc1a87189637cc725de7624abac6f325c1b1a58aed6c6fe',
   'openspec-propose': 'a02bf8d97ec10bd3a2a74ee67c7994d206ec55f55402121b9f7da36c22779833',
   'openspec-update-change': 'cee18194a8b231376343a3fe2ab330145929ee310333d8684aa48422d1dd8b10',
-  'openspec': 'fe92ae3c5fb77941329619f5c663c45e4743e3ce8e27363097f3bf9ea482c01d',
+  'openspec': 'aeaa75ddfef33859fc50a273d3954851d305c09ff6e2353941708fcdba53dc44',
 };
 
 // Intentionally excludes getFeedbackSkillTemplate: this list only models templates
@@ -908,6 +908,40 @@ describe('skill templates split parity', () => {
         'These are prompt-level behavior contracts, not enforceable checks'
       );
     }
+  });
+
+  // `instructions apply` reports a ready change with no delta specs (or a stray
+  // delta file) through `warnings`, and `validate` rejects that change. A skill
+  // that gates only on `state` implements it anyway (#2166).
+  it('shows apply warnings and pauses before implementing, even when ready (#2166)', () => {
+    const variants: Array<[string, string]> = [
+      ['apply skill', getApplyChangeSkillTemplate().instructions],
+      ['apply command', getOpsxApplyCommandTemplate().content],
+    ];
+
+    for (const [variant, content] of variants) {
+      expect(content, variant).toContain('`warnings` (when present)');
+      expect(content, variant).toContain(
+        'If `warnings` is non-empty, even when `state` is `"ready"`: show every warning verbatim and pause before implementing'
+      );
+      expect(content, variant).toContain('write the delta specs or declare `skip_specs: true`');
+      expect(content, variant).toContain('ask whether to fix it first or continue anyway');
+      expect(content, variant).toContain(
+        'do not pause again for the same warnings when rerunning the apply instructions'
+      );
+      // The warnings gate comes before the catch-all "proceed" branch.
+      expect(content.indexOf('If `warnings` is non-empty'), variant).toBeLessThan(
+        content.indexOf('- Otherwise: proceed to implementation')
+      );
+    }
+
+    // The router's fallback for when the apply skill is not installed.
+    const withoutSkills = getRouterSkillTemplate().references?.['without-skills.md'] ?? '';
+    const applySection = withoutSkills.slice(
+      withoutSkills.indexOf('## /opsx:apply'),
+      withoutSkills.indexOf('## /opsx:verify')
+    );
+    expect(applySection).toContain('If it returns `warnings`, show them and ask whether to fix them first');
   });
 
   it('makes the archive-inputs lookup fail open and sync instruction consumption fail closed', () => {

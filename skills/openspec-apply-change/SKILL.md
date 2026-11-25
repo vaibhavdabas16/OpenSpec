@@ -60,12 +60,14 @@ In both branches, never create the root as a side effect: do not run `openspec i
    - Optional `context`: current required project instruction input from the selected root
    - Optional `operationGuidance`: current advisory guidance for apply
    - `missingArtifacts` (when present): required artifact ids with no output
+   - `warnings` (when present): problems that do not block apply but that `openspec validate` or archive will act on, such as a change with no delta specs that does not declare `skip_specs: true`
 
    **Handle states:**
    - If `state: "blocked"`: show the message and pause implementation.
      - If `missingArtifacts` is non-empty: show the missing artifacts and the recovery step from the CLI’s `instruction` field. Keep the selected store on any follow-up command.
      - Otherwise, follow the CLI instruction to create or repair the schema-configured tracking file from existing planning artifacts. Do not assume another artifact is ready or start implementation while blocked.
    - If `state: "all_done"`: report that all tracked tasks are complete and suggest review or verification as appropriate before archiving
+   - If `warnings` is non-empty, even when `state` is `"ready"`: show every warning verbatim and pause before implementing. Point the user at the repair each warning names (for example, write the delta specs or declare `skip_specs: true`, or move stray requirements into the capability's `spec.md`), and ask whether to fix it first or continue anyway. If the user chooses to continue, proceed, and do not pause again for the same warnings when rerunning the apply instructions.
    - Otherwise: proceed to implementation
 
    Treat `context` as a required prompt-level input. Read and consider it, and
@@ -196,6 +198,7 @@ What would you like to do?
 - Consider every guidance entry; explain any inapplicable or conflicting advice
 - Do not copy runtime context or operation guidance into implementation files or planning artifacts
 - Preserve CLI-controlled blocked/ready/all-done behavior and completion criteria
+- Never drop CLI `warnings`: show them and pause before implementing, even when the state is ready
 
 **Fluid Workflow Integration**
 

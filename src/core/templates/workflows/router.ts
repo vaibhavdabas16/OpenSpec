@@ -30,7 +30,7 @@ Read the change's files, revise the ones the user asked about, then run \`opensp
 
 ## /opsx:apply
 
-Run \`openspec instructions apply --change "<name>" --json\`, read the files it lists under \`contextFiles\`, then do the unchecked tasks in order. Tick each task in \`tasks.md\` (\`- [ ]\` to \`- [x]\`) as soon as it is done.
+Run \`openspec instructions apply --change "<name>" --json\`. If it returns \`warnings\`, show them and ask whether to fix them first before writing any code. Read the files it lists under \`contextFiles\`, then do the unchecked tasks in order. Tick each task in \`tasks.md\` (\`- [ ]\` to \`- [x]\`) as soon as it is done.
 
 ## /opsx:verify
 
